@@ -1,4 +1,5 @@
 import os
+import subprocess as sp
 import Tkinter as tkinter
 
 # return the remote brands
@@ -46,13 +47,8 @@ def parseFile(lines):
 	return returnVal
 
 def sendCommand(lineCommand):
-	i = 0
-
-def power():
-	i = 0
-
-def input():
-	i=0
+#	REMOTE_PATH = "/etc/lirc/lircd.conf.d"
+	sp.call(["irsend","SEND_ONCE", "Epson_12807990", lineCommand])
 
 def drawStart(line):
 	m = tkinter.Tk()
@@ -64,10 +60,10 @@ def drawStart(line):
 	var = tkinter.StringVar(m)
 	var.set("Choose One")
 	
-	tkinter.Button(m, text = 'power', command=lambda: power()).grid(row=0,column=0,columnspan=1,padx=PADDING)
-	tkinter.Button(m, text = 'input', command=lambda: input()).grid(row=0,column=3,columnspan=1, padx=PADDING)
-	tkinter.Button(m, text = 'Volume Up', command=lambda: volUP()).grid(row=1,column=1,padx=PADDING, pady=PADDING)
-	tkinter.Button(m, text = 'Volume Down').grid(row=2,column=1,padx=PADDING,pady=PADDING)
+	tkinter.Button(m, text = 'power', command=lambda:sendCommand('KEY_POWER')).grid(row=0,column=0,columnspan=1,padx=PADDING)
+	tkinter.Button(m, text = 'input', command=lambda:sendCommand('KEY_SEARCH')).grid(row=0,column=3,columnspan=1, padx=PADDING)
+	tkinter.Button(m, text = 'Volume Up', command=lambda:sendCommand('KEY_VOLUMEUP')).grid(row=1,column=1,padx=PADDING, pady=PADDING)
+	tkinter.Button(m, text = 'Volume Down',command=lambda:sendCommand('KEY_VOLUMEDOWN')).grid(row=2,column=1,padx=PADDING,pady=PADDING)
 #	for r in range (GRID_MAX):
 #		for c in range (GRID_MAX):
 #			tkinter.Button(m, text = 'button').grid(row=r,column=c)
