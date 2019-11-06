@@ -15,5 +15,6 @@
 	<classpathentry exported="true" kind="con" path="org.eclipse.jst.j2ee.internal.module.container"/>
 	<classpathentry kind="lib" path="C:/commons-io-2.6.jar"/>
 	<classpathentry kind="lib" path="C:/gson-2.8.2.jar"/>
+	<classpathentry kind="lib" path="C:/commons-codec-1.13.jar"/>
 	<classpathentry kind="output" path="build/classes"/>
 </classpath>

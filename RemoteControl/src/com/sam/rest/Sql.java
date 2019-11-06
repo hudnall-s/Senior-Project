@@ -5,14 +5,14 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
+import com.sam.rest.Authentication.*;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 
 public class Sql {
 
-	private static Connection connect() {
+	public static Connection connect() {
 		Connection con = null;
 
 		try {
@@ -35,7 +35,7 @@ public class Sql {
 
 	public static JSONObject addUser(String name, String password, String email) {
 		String line = "INSERT INTO seniorProject.Users ( `userName`, `userPassword`, `userEmail`) VALUES ('" + name
-				+ "', '" + password + "', '" + email + "');";
+				+ "', 'temp', '" + email + "');";
 
 		String line2 = "SELECT * FROM seniorProject.Users WHERE userName LIKE '" + name + "';";
 		JSONObject ret = new JSONObject();
@@ -45,31 +45,82 @@ public class Sql {
 			stmt = con.createStatement();
 			stmt.execute(line);
 			ResultSet rs = stmt.executeQuery(line2);
+			int id = 0;
 			while (rs.next()) {
+				id = rs.getInt("userId");
 				ret.put("Userid", rs.getObject("userId"));
 				ret.put("Name", rs.getObject("userName"));
 				ret.put("Email", rs.getObject("userEmail"));
 			}
+
+			Authentication auth = new Authentication();
+			auth.generateHashSalt(id);
+			String hash = auth.getHash(id, password);
+
+			String line3 = "UPDATE `seniorProject`.`Users` SET `userPassword`='" + hash + "' WHERE `userId`= '" + id
+					+ "';";
+
+			stmt.execute(line3);
+
 			con.close();
 		} catch (SQLException | JSONException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			// e.printStackTrace();
+			try {
+				ret.put("ERROR", "Invalid UserID");
+			} catch (JSONException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
 		}
 
 		return ret;
 	}
 
+	private static int macroMaxNumber(int userId, int macroId) {
+		Connection con = connect();
+		String line = "SELECT MAX(runSequence) as run from seniorProject.userMacros WHERE userId =" + userId
+				+ " and idMacro = " + macroId + ";";
+
+		int number = 0;
+		try {
+			Statement stmt = con.createStatement();
+			ResultSet rs = stmt.executeQuery(line);
+			while (rs.next()) {
+				number = rs.getInt("run");
+			}
+			return number;
+
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		return number;
+	}
+
 	public static ArrayList<Macros> addMacro(int UserId, int MacroId, String remote, String Command) {
 		ArrayList<Macros> retObj = new ArrayList();
-		String line = "INSERT INTO seniorProject.userMacros(`idMacro`, `userId`, `remote`, `command`) VALUES ("
-				+ MacroId + "," + UserId + ",'" + remote + "','" + Command + "');";
+
+		int max = macroMaxNumber(UserId, MacroId);
 		Connection con = connect();
 		Statement stmt;
 		String line2 = "SELECT * FROM seniorProject.userMacros WHERE userId = " + UserId + " AND idMacro = " + MacroId
-				+ " ORDER By idMacro ASC; ";
+				+ " ORDER By runSequence ASC; ";
 		try {
 			stmt = con.createStatement();
-			stmt.execute(line);
+			String[] commands = Command.split(",");
+			for (int i = 0; i < commands.length; i++) {
+
+				max++;
+				String line = "INSERT INTO seniorProject.userMacros(`idMacro`, `userId`, `remote`, `command`, `runSequence`) VALUES ("
+						+ MacroId + "," + UserId + ",'" + remote + "','" + commands[i] + "'," + max + ");";
+				stmt.execute(line);
+			}
+
 			ResultSet rs = stmt.executeQuery(line2);
 			while (rs.next()) {
 				Macros m = new Macros();
@@ -79,7 +130,7 @@ public class Sql {
 				m.setuserid(UserId);
 				retObj.add(m);
 			}
-			con.close();
+
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

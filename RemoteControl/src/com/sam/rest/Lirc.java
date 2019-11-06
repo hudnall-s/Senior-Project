@@ -19,6 +19,12 @@ import org.apache.commons.io.FileUtils;
 @Path("/lirc")
 public class Lirc {
 
+	public boolean checkRemote(String remoteName) {
+		ArrayList<String> Remotes = listLiveRemotes();
+
+		return Remotes.contains(remoteName);
+	}
+
 	@GET
 	@Path("/remotes")
 	@Produces({ "application/json" })
